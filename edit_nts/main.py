@@ -6,27 +6,34 @@ from stats import plot_labels
 
 def main():
     wikilarge_tokens = None
+    wikismall_tokens = None
 
-    if(len(os.listdir('output')) == 0):
-        print("Reading dataset files")
+    print("Reading dataset files")
 
+    if(len(os.listdir('output/wikilarge')) == 0):
         print("Processing wikilarge files")
         comp_lines, simp_lines = dataset.wikilarge()
         wikilarge_tokens = process_raw_lines(comp_lines, simp_lines) 
-        dataset.serialize_tokens(dataset.WIKILARGE_TRAIN_PREFIX, wikilarge_tokens)
+        dataset.serialize_tokens(dataset.WIKILARGE_TRAIN_PREFIX, 'wikilarge', wikilarge_tokens)
     else:
-        print("Deserializing processed datasets")
-
         print("Deserializing wikilarge")
-        wikilarge_tokens = dataset.deserialize_tokens(dataset.WIKILARGE_TRAIN_PREFIX)
+        wikilarge_tokens = dataset.deserialize_tokens(dataset.WIKILARGE_TRAIN_PREFIX, 'wikilarge')
+
+    if(len(os.listdir('output/wikismall')) == 0):
+        print("Processing wikismall files")
+        comp_lines, simp_lines = dataset.wikismall()
+        wikismall_tokens = process_raw_lines(comp_lines, simp_lines) 
+        dataset.serialize_tokens(dataset.WIKISMALL_TRAIN_PREFIX, 'wikismall', wikismall_tokens)
+    else:
+        print("Deserializing wikismall")
+        wikismall_tokens = dataset.deserialize_tokens(dataset.WIKISMALL_TRAIN_PREFIX, 'wikismall')
         
 
-    print("Token keys: {}".format(wikilarge_tokens.keys()))
-    print("Num edit labels: {}".format(len(wikilarge_tokens["edit_labels"])))
-    print("First edit sequence: {}".format(wikilarge_tokens["edit_labels"][0]))
-
     print("Generating wikilarge stats")
-    plot_labels(wikilarge_tokens["edit_labels"], 'edit_labels.png')
+    plot_labels(wikilarge_tokens["edit_labels"], 'wikilarge_labels.png')
+
+    print("Generating wikismall stats")
+    plot_labels(wikismall_tokens["edit_labels"], 'wikismall_labels.png')
     print("Finished")
 
 if __name__ == "__main__":
