@@ -66,6 +66,9 @@ dependencies:
   - joblib=0.16.0=py_0
   - jpeg=9d=h516909a_0
   - jsonschema=3.2.0=py38h32f6830_1
+  - jupyter_client=6.1.7=py_0
+  - jupyter_core=4.6.3=py38h32f6830_1
+  - jupyterlab_pygments=0.1.2=pyh9f0ad1d_0
   - keras-preprocessing=1.1.0=py_0
   - kiwisolver=1.2.0=py38hbf85e49_0
   - lcms2=2.11=hbd6801e_0
@@ -85,10 +88,15 @@ dependencies:
   - libtiff=4.1.0=hc7e4089_6
   - libwebp-base=1.1.0=h516909a_3
   - lz4-c=1.9.2=he1b5a44_3
+  - markdown=3.3=pyh9f0ad1d_0
+  - markupsafe=1.1.1=py38h8df0ef7_2
   - matplotlib=3.3.1=1
   - matplotlib-base=3.3.1=py38h91b0d89_1
   - mistune=0.8.4=py38h1e0a361_1001
   - murmurhash=1.0.2=py38he6710b0_0
+  - nbclient=0.5.0=py_0
+  - nbconvert=6.0.7=py38h32f6830_0
+  - nbformat=5.0.7=py_0
   - ncurses=6.2=he1b5a44_1
   - nest-asyncio=1.4.0=py_0
   - nltk=3.5=py_0
@@ -99,6 +107,8 @@ dependencies:
   - openssl=1.1.1g=h516909a_1
   - opt_einsum=3.3.0=py_0
   - packaging=20.4=pyh9f0ad1d_0
+  - pandoc=2.10.1=h516909a_0
+  - pandocfilters=1.4.2=py_1
   - parso=0.5.2=py_0
   - pexpect=4.8.0=py38h32f6830_1
   - pickleshare=0.7.5=py38h32f6830_1001
@@ -171,8 +181,10 @@ dependencies:
   - zstd=1.4.5=h6597ccf_2
   - pip:
     - contractions==0.0.25
+    - en-core-web-sm==2.3.1
     - en-core-web-sm-mirror==2.2.5
     - pyahocorasick==1.4.0
     - textsearch==0.0.17
     - unidecode==1.1.1
+prefix: /home/cse496dl/asturtz/.conda/envs/editnts
 

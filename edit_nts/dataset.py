@@ -1,6 +1,8 @@
 import os
+import pickle
 
 WIKILARGE_PATH = '/common/cse896/asturtz/data-simplification/wikilarge'
+WIKILARGE_TRAIN_PREFIX = 'wiki.full.aner.ori.train'
 WIKISMALL_PATH = '/common/cse896/asturtz/data-simplification/wikismall'
 
 def load_raw_lines(path_prefix):
@@ -18,26 +20,25 @@ def load_raw_lines(path_prefix):
 
     return src_lines, dst_lines
 
-def serialize_tokens(path_prefix, tokens):
-    token_path = path_prefix + '.pickle'
-
-    with open(token_path, 'wb') as token_file:
-        pickle.dump(tokens, token_file)
+def serialize_tokens(file_prefix, tokens):
+    for key, value in tokens.items():
+        with open(os.path.join('output', file_prefix + '.' + key + '.pickle'), 'wb') as file:
+            pickle.dump(value, file)
     
     return None
 
-def deserialize_tokens(path_prefix):
-    token_path = path_prefix + '.pickle'
+def deserialize_tokens(file_prefix):
+    token_keys = ['complex_tokens', 'complex_pos', 'simple_tokens', 'edit_labels']
 
-    tokens = None
-    with open(token_path, 'rb') as token_file:
-        tokens = pickle.load(token_file)
-
+    tokens = {}
+    for key in token_keys:
+        with open(os.path.join('output', file_prefix + '.' + key + '.pickle'), 'rb') as file:
+            tokens[key] = pickle.load(file)
+            
     return tokens
 
 def wikilarge():
-    TRAIN_FILE_PREFIX = 'wiki.full.aner.ori.train'
-    train_path_prefix = os.path.join(WIKILARGE_PATH, TRAIN_FILE_PREFIX)
+    train_path_prefix = os.path.join(WIKILARGE_PATH, WIKILARGE_TRAIN_PREFIX)
     
     return load_raw_lines(train_path_prefix)
 

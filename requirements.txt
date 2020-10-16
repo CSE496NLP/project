@@ -16,3 +16,4 @@ matplotlib-base=3.3.1=py38h91b0d89_1
 nltk=3.5=py_0
 numpy=1.19.1=py38hbc27379_2
 pandas
+cpickle
