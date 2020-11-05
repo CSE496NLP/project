@@ -1,7 +1,13 @@
+#!/usr/bin/env python
+
 import os
+
 import numpy as np
 import pandas as pd
+
 import data
+from ppdb_parser import load_ppdb
+
 from nltk import pos_tag
 from label_edits import sent2edit
 
@@ -35,7 +41,7 @@ def replace_lrb(sent_string):
     return new_sent
 
 
-def process_raw_data(comp_txt, simp_txt):
+def process_raw_data(comp_txt, simp_txt, vocab_path, ppdb):
     comp_txt = [line.lower().split() for line in comp_txt]
     simp_txt = [line.lower().split() for line in simp_txt]
     # df_comp = pd.read_csv('data/%s_comp.csv'%dataset,  sep='\t')
@@ -54,7 +60,7 @@ def process_raw_data(comp_txt, simp_txt):
         simp_sentences = df['simp_tokens'].tolist()
         pair_sentences = list(zip(comp_sentences,simp_sentences))
 
-        edits_list = [sent2edit(l[0],l[1]) for l in pair_sentences] # transform to edits based on comp_tokens and simp_tokens
+        edits_list = [sent2edit(l[0],l[1], ppdb) for l in pair_sentences] # transform to edits based on comp_tokens and simp_tokens
         df['edit_labels'] = edits_list
         return df
 
@@ -63,7 +69,7 @@ def process_raw_data(comp_txt, simp_txt):
         pos_sentences = [pos_tag(sent) for sent in src_sentences]
         df['comp_pos_tags'] = pos_sentences
 
-        pos_vocab = data.POSvocab()
+        pos_vocab = data.POSvocab(vocab_path)
         pos_ids_list = []
         for sent in pos_sentences:
             pos_ids = [pos_vocab.w2i[w[1]] if w[1] in pos_vocab.w2i.keys() else pos_vocab.w2i[UNK] for w in sent]
@@ -113,3 +119,95 @@ def editnet_data_to_editnetID(df,output_path):
                                             'edit_labels','new_edit_ids','comp_pos_tags','comp_pos_ids'])
     outdf.to_pickle(output_path)
     print('saved to %s'%output_path)
+
+def main():
+    import argparse
+    
+    WORK = os.environ['WORK']
+    COMMON_DATADIR='/common/cse896/asturtz/data-simplification/'
+    
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument(
+        '--data_path',
+         type=str,
+         dest='data_path',
+         default=COMMON_DATADIR
+    )
+    argparser.add_argument(
+        '--dataset',
+        type=str,
+        dest='dataset',
+        default='wikilarge'
+    )
+    argparser.add_argument(
+        '--file_base',
+        type=str,
+        dest='file_base',
+        default='wiki.full.aner.')
+    argparser.add_argument(
+        '--ppdb-version',
+        type=str,
+        dest='ppdb_version',
+        default='ppdb-tldr')
+    argparser.add_argument(
+        '--dataset_part',
+        type=str,
+        dest='dataset_part',
+        default='train'
+    )
+    argparser.add_argument(
+        '--output_directory',
+        type=str,
+        dest='output_dir'
+    )
+    argparser.add_argument(
+        '--vocab_path',
+        type=str,
+        dest='vocab_path',
+        default=os.path.join(os.path.dirname(os.path.realpath(__file__)), 'vocab_data') +'/'
+    )
+    args = argparser.parse_args()
+
+    if args.output_dir == None:
+        args.output_dir = os.path.join(WORK, 'editnts-ppdb-data', args.dataset)
+    ppdb_path = os.path.join(args.data_path, 'ppdb', args.ppdb_version)
+    input_src_sent = os.path.join(args.data_path, args.dataset, f"{args.file_base}{args.dataset_part}.src")
+    input_dst_sent = os.path.join(args.data_path, args.dataset, f"{args.file_base}{args.dataset_part}.dst")
+
+    print(f"Arguments:")
+    print(f"  Dataset            : {args.dataset}")
+    print(f"  Partition          : {args.dataset_part}")
+    print(f"  File Basename      : {args.file_base}")
+    print(f"  PPDB Version:      : {args.ppdb_version}")
+    print(f"Computed:")
+    print(f"  Output Directory   : {args.output_dir}")
+    print(f"  PPDB Path          : {ppdb_path}")
+    print(f"  Input SRC Sentences: {input_src_sent}")
+    print(f"  Input DST Sentences: {input_dst_sent}")
+
+    print("Loading PPDB... ", end='')
+    ppdb = load_ppdb(ppdb_path)
+    print("Done.")
+
+    print("Opening Source Sentences... ", end='')
+    with open(input_src_sent, 'r') as f:
+        source_sentences = f.readlines()
+    print("Done.")
+
+    print("Opening Destination Sentences... ", end='')
+    with open(input_dst_sent, 'r') as f:
+        dest_sentences = f.readlines()
+    print("Done.")
+
+    print("Processing raw data... ", end='')
+    data_frame = process_raw_data(source_sentences, dest_sentences, vocab_path, ppdb)
+    print("Done.")
+
+    print("Converting to IDs... ", end='')
+    editnet_data_to_editnetID(data_frame, os.path.join(args.output_dir, f'{args.dataset_part}.filtered.pos.'))
+    print("Done.")
+    
+
+
+if __name__ == '__main__':
+    main()

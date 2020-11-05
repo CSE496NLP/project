@@ -34,7 +34,7 @@ def edit_distance(sent1, sent2, max_id=4999):
                 dp[i][j] = 1 + min(edit_candidates)
     return dp
 
-def sent2edit(sent1, sent2):
+def sent2edit(sent1, sent2, ppdb):
     # print(sent1,sent2)
     '''
     '''
