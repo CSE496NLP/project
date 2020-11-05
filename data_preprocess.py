@@ -190,11 +190,13 @@ def main():
     print("Done.")
 
     print("Opening Source Sentences... ", end='')
-    source_sentences =  open(input_src_sent, 'r')
+    with open(input_src_sent, 'r') as f:
+        source_sentences = f.readlines()
     print("Done.")
 
     print("Opening Destination Sentences... ", end='')
-    dest_sentences =  open(input_dst_sent, 'r')
+    with open(input_dst_sent, 'r') as f:
+        dest_sentences = f.readlines()
     print("Done.")
 
     print("Processing raw data... ", end='')
