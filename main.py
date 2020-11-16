@@ -194,9 +194,9 @@ def main():
     parser.add_argument('--vocab_size', dest='vocab_size', default=30000, type=int)
     parser.add_argument('--batch_size', dest='batch_size', default=32, type=int)
     parser.add_argument('--max_seq_len', dest='max_seq_len', default=100)
-    parser.add_argument('--is_db', dest='is_db', type=bool, default=False,
+    parser.add_argument('--is_db', dest='is_db', default=False, action='store_true',
                         help='Is the dataset a DB?')
-    parser.add_argument('--is_eval', dest='is_eval', type=bool, default=False,
+    parser.add_argument('--is_eval', dest='is_eval', default=False, action='store_true',
                         help='Should training use evaluation?')
 
     parser.add_argument('--epochs', type=int, default=50)
