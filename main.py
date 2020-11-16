@@ -83,7 +83,7 @@ def reweight_global_loss(w_add,w_keep,w_del):
     return NLL_weight
 
 def training(edit_net,nepochs, args, vocab, print_every=100, check_every=500):
-    eval_dataset = data.Dataset(args.data_path + 'val.df.filtered.pos') # load eval dataset
+    eval_dataset = data.Dataset(args.data_set, is_db=args.is_db) # load eval dataset
     evaluator = Evaluator(loss= nn.NLLLoss(ignore_index=vocab.w2i['PAD'], reduction='none'))
     editnet_optimizer = torch.optim.Adam(edit_net.parameters(),
                                           lr=1e-3, weight_decay=1e-6)
@@ -102,10 +102,10 @@ def training(edit_net,nepochs, args, vocab, print_every=100, check_every=500):
     for epoch in range(nepochs):
         # scheduler.step()
         #reload training for every epoch
-        if os.path.isfile(args.data_path+'train.df.filtered.pos'):
-            train_dataset = data.Dataset(args.data_path + 'train.df.filtered.pos')
+        if os.path.isfile(arg.data_set):
+            train_dataset = data.Dataset(args.data_set)
         else:  # iter chunks and vocab_data
-            train_dataset = data.Datachunk(args.data_path + 'train.df.filtered.pos')
+            train_dataset = data.Datachunk(args.data_set)
 
         for i, batch_df in train_dataset.batch_generator(batch_size=args.batch_size, shuffle=True):
 
@@ -151,7 +151,7 @@ def training(edit_net,nepochs, args, vocab, print_every=100, check_every=500):
                 print(log_msg)
 
                 # Checkpoint
-            if i % check_every == 0:
+            if i % check_every == 0 and args.is_eval:
                 edit_net.eval()
 
                 val_loss, bleu_score, sari, sys_out = evaluator.evaluate(eval_dataset, vocab, edit_net,args)
@@ -169,17 +169,20 @@ def training(edit_net,nepochs, args, vocab, print_every=100, check_every=500):
                 edit_net.train()
     return edit_net
 
-dataset='newsela'
+# dataset='newsela'
 def main():
     torch.manual_seed(233)
     logging.basicConfig(level=logging.INFO, format='%(asctime)s [INFO] %(message)s')
 
+    import os
+    WORK = os.environ['WORK']
+
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_path', type=str,dest='data_path',
-                        default='/home/ml/ydong26/data/EditNTS_data/editnet_data/%s/'%dataset,
+    parser.add_argument('--data_set', type=str,dest='data_set',
+                        default='',
                         help='Path to train vocab_data')
     parser.add_argument('--store_dir', action='store', dest='store_dir',
-                        default='/home/ml/ydong26/tmp_store/editNTS_%s'%dataset,
+                        default=os.path.join(WORK, 'editnts-ppdb'),
                         help='Path to exp storage directory.')
     parser.add_argument('--vocab_path', type=str, dest='vocab_path',
                         default='../vocab_data/',
@@ -191,6 +194,10 @@ def main():
     parser.add_argument('--vocab_size', dest='vocab_size', default=30000, type=int)
     parser.add_argument('--batch_size', dest='batch_size', default=32, type=int)
     parser.add_argument('--max_seq_len', dest='max_seq_len', default=100)
+    parser.add_argument('--is_db', dest='is_db', type=bool, default=False,
+                        help='Is the dataset a DB?')
+    parser.add_argument('--is_eval', dest='is_eval', type=bool, default=False,
+                        help='Should training use evaluation?')
 
     parser.add_argument('--epochs', type=int, default=50)
     parser.add_argument('--hidden', type=int, default=200)
