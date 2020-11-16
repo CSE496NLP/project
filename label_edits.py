@@ -34,7 +34,10 @@ def edit_distance(sent1, sent2, max_id=4999):
                 dp[i][j] = 1 + min(edit_candidates)
     return dp
 
-def sent2edit(sent1, sent2, ppdb):
+def sublists(xs):
+    return [xs[m:n+1] for m in range(len(xs)) for n in range(m, len(xs))]	
+
+def sent2edit(sent1, sent2):
     # print(sent1,sent2)
     '''
     '''
