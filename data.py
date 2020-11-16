@@ -192,8 +192,8 @@ class Dataset():
     def __init__(self,data_path,is_db=False):
         if is_db:
             import db
-            db.create_connection(data_path)
-            self.df = db.load_dataframe()
+            self.connection = db.create_connection(data_path)
+            self.df = db.load_dataframe(self.connection)
         else:
             self.df = pd.read_pickle(data_path)
         self.idx_count = 0
