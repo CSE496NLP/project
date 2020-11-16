@@ -1,5 +1,3 @@
-from collections import namedtuple
-
 import numpy as np 
 
 def edit_distance(sent1, sent2, max_id=4999):
@@ -39,17 +37,7 @@ def edit_distance(sent1, sent2, max_id=4999):
 def sublists(xs):
     return [xs[m:n+1] for m in range(len(xs)) for n in range(m, len(xs))]	
 
-Sub = namedtuple('Sub', ['src', 'dst'])
-
-def ppdb_subsequences(sent1, sent2, ppdb):
-    sent2_sublists = sublists(sent2)
-    return [Sub(src, list(dst))
-        for src in sublists(sent1)
-        for dst in ppdb.get_rhs(src)
-        if len(dst) > 0 and list(dst) in sent2_sublists
-    ]
-
-def sent2edit(sent1, sent2, ppdb):
+def sent2edit(sent1, sent2):
     # print(sent1,sent2)
     '''
     '''
@@ -57,9 +45,6 @@ def sent2edit(sent1, sent2, ppdb):
     edits = []
     pos = []
     m, n = len(sent1), len(sent2)
-
-    subs = ppdb_subsequences(sent1, sent2, ppdb)
-
     while m != 0 or n != 0:
         curr = dp[m][n]
         if m==0: #have to insert all here
@@ -78,18 +63,7 @@ def sent2edit(sent1, sent2, ppdb):
             diag = dp[m-1][n-1]
             left = dp[m][n-1]
             top = dp[m-1][n]
-
-            current_subs = [sub
-                for sub in subs
-                if len(sub.src) <= m and sent1[m - len(sub.src):m] == sub.src
-            ]
-
-            if len(current_subs) > 0:
-                sub = current_subs[0]
-                edits.append(sub)
-                m -= len(sub.src)
-                n -= len(sub.dst)
-            elif sent2[n-1] == sent1[m-1]: # keep
+            if sent2[n-1] == sent1[m-1]: # keep
                 edits.append('KEEP')
                 pos.append(diag)
                 m -= 1
