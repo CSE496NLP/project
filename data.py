@@ -194,15 +194,14 @@ class Dataset():
             import db
             self.connection = db.create_connection(data_path)
             self.df = pd.read_sql("SELECT * FROM lines", self.connection)
-            self.df.assign(
-                comp_tokens = lambda fr: fr['comp_tokens'].map(lambda thing: thing.split()),
-                comp_ids = lambda fr: fr['comp_ids'].map(lambda thing: map(int, thing.split())),
-                simp_tokens = lambda fr: fr['simp_tokens'].map(lambda thing: thing.split()),
-                simp_ids = lambda fr: fr['simp_ids'].map(lambda thing: map(int, thing.split())),
-                edit_labels = lambda fr: fr['edit_labels'].map(lambda thing: thing.split()),
-                new_edit_ids = lambda fr: fr['new_edit_ids'].map(lambda thing: map(int, thing.split())),
-                comp_pos_tags = lambda fr: fr['comp_pos_tags'].map(lambda thing: thing.split()),
-                comp_pos_ids = lambda fr: fr['comp_pos_ids'].map(lambda thing: map(int, thing.split())))
+            self.df['comp_tokens'] = self.df['comp_tokens'].map(lambda thing: thing.split())
+            self.df['comp_ids'] = self.df['comp_ids'].map(lambda thing: list(map(int, thing.split())))
+            self.df['simp_tokens'] = self.df['simp_tokens'].map(lambda thing: thing.split())
+            self.df['simp_id'] = self.df['simp_ids'].map(lambda thing: list(map(int, thing.split())))
+            self.df['edit_labels'] = self.df['edit_labels'].map(lambda thing: thing.split())
+            self.df['new_edit_ids'] = self.df['new_edit_ids'].map(lambda thing: list(map(int, thing.split())))
+            self.df['comp_pos_tags'] = self.df['comp_pos_tags'].map(lambda thing: thing.split())
+            self.df['comp_pos_ids'] = self.df['comp_pos_ids'].map(lambda thing: list(map(int, thing.split())))
         else:
             self.df = pd.read_pickle(data_path)
         self.idx_count = 0
