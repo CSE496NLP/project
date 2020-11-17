@@ -201,7 +201,7 @@ class Dataset():
                 simp_ids = lambda fr: fr['simp_ids'].map(lambda thing: map(int, thing.split())),
                 edit_labels = lambda fr: fr['edit_labels'].map(lambda thing: thing.split()),
                 new_edit_ids = lambda fr: fr['new_edit_ids'].map(lambda thing: map(int, thing.split())),
-                comp_pos_tokens = lambda fr: fr['comp_pos_tokens'].map(lambda thing: thing.split()),
+                comp_pos_tags = lambda fr: fr['comp_pos_tags'].map(lambda thing: thing.split()),
                 comp_pos_ids = lambda fr: fr['comp_pos_ids'].map(lambda thing: map(int, thing.split)))
         else:
             self.df = pd.read_pickle(data_path)
