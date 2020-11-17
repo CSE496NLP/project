@@ -83,7 +83,8 @@ def reweight_global_loss(w_add,w_keep,w_del):
     return NLL_weight
 
 def training(edit_net,nepochs, args, vocab, print_every=100, check_every=500):
-    eval_dataset = data.Dataset(args.data_set, is_db=args.is_db) # load eval dataset
+    if args.is_eval:
+        eval_dataset = data.Dataset(args.data_set, is_db=args.is_db) # load eval dataset
     evaluator = Evaluator(loss= nn.NLLLoss(ignore_index=vocab.w2i['PAD'], reduction='none'))
     editnet_optimizer = torch.optim.Adam(edit_net.parameters(),
                                           lr=1e-3, weight_decay=1e-6)
@@ -102,8 +103,8 @@ def training(edit_net,nepochs, args, vocab, print_every=100, check_every=500):
     for epoch in range(nepochs):
         # scheduler.step()
         #reload training for every epoch
-        if os.path.isfile(arg.data_set):
-            train_dataset = data.Dataset(args.data_set)
+        if os.path.isfile(args.data_set):
+            train_dataset = data.Dataset(args.data_set, is_db=args.is_db)
         else:  # iter chunks and vocab_data
             train_dataset = data.Datachunk(args.data_set)
 
