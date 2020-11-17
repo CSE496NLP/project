@@ -74,8 +74,10 @@ def main():
     print(f"  Input DST Sentences: {input_dst_sent}")
 
     print("Processing PPDB...")
-    conn = db.create_connection('db/ppdb.db')
-    parse_ppdb(ppdb_path, conn)
+    df = parse_ppdb(ppdb_path)
+    print('Saving PPDB...')
+    conn = db.create_connection('db/ppdb-2.db')
+    df.to_sql('lines', conn, chunksize=500, method='multi')
     conn.close()
         
     print("Done.")

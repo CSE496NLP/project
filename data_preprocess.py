@@ -64,10 +64,14 @@ def process_raw_line(comp_line, simp_line, token_vocab, pos_vocab):
     comp_pos_ids = [lookup_id(tag, pos_vocab) for _, tag in comp_pos_tags]
 
     return {
-        'comp_tokens': list(zip(comp_tokens, comp_ids)),
-        'simp_tokens': list(zip(simp_tokens, simp_ids)),
-        'edit_labels': list(zip(edit_labels, edit_label_ids)),
-        'comp_pos_tags': list(zip(comp_pos_tags, comp_pos_ids))
+        'comp_tokens': ' '.join(comp_tokens),
+        'comp_ids': ' '.join(map(str, comp_ids)),
+        'simp_tokens': ' '.join(simp_tokens),
+        'simp_ids': ' '.join(map(str, simp_ids)),
+        'edit_labels': ' '.join(edit_labels),
+        'new_edit_ids': ' '.join(map(str, edit_label_ids)),
+        'comp_pos_tags': ' '.join([str(tag) for _, tag in comp_pos_tags]),
+        'comp_pos_ids': ' '.join(map(str, comp_pos_ids))
     }
     
 def process_raw_data(comp_txt, simp_txt, vocab_path):
