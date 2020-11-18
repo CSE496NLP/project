@@ -161,6 +161,7 @@ def training(edit_net,nepochs, args, vocab, print_every=100, check_every=500):
 
                 if val_loss < best_eval_loss:
                     best_eval_loss = val_loss
+            if i % check_every == 0:
                 Checkpoint(model=edit_net,
                            opt=editnet_optimizer,
                            epoch=epoch, step=i,
