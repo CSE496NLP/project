@@ -83,8 +83,8 @@ def reweight_global_loss(w_add,w_keep,w_del):
     return NLL_weight
 
 def training(edit_net,nepochs, args, vocab, print_every=100, check_every=500):
-    if args.is_eval:
-        eval_dataset = data.Dataset(args.data_set, is_db=args.is_db) # load eval dataset
+    if args.eval_data_set != None:
+        eval_dataset = data.Dataset(args.eval_data_set, is_db=args.is_db) # load eval dataset
     evaluator = Evaluator(loss= nn.NLLLoss(ignore_index=vocab.w2i['PAD'], reduction='none'))
     editnet_optimizer = torch.optim.Adam(edit_net.parameters(),
                                           lr=1e-3, weight_decay=1e-6)
@@ -152,10 +152,10 @@ def training(edit_net,nepochs, args, vocab, print_every=100, check_every=500):
                 print(log_msg)
 
                 # Checkpoint
-            if i % check_every == 0 and args.is_eval:
+            if i % check_every == 0 and args.eval_data_set != none:
                 edit_net.eval()
 
-                val_loss, bleu_score, sari, sys_out = evaluator.evaluate(eval_dataset, vocab, edit_net,args)
+                val_loss, bleu_score, sari, sys_out, add_score, del_score, keep_score = evaluator.evaluate(eval_dataset, vocab, edit_net,args)
                 log_msg = "epoch %d, step %d, Dev loss: %.4f, Bleu score: %.4f, Sari: %.4f \n" % (epoch, i, val_loss, bleu_score, sari)
                 print(log_msg)
 
@@ -171,6 +171,16 @@ def training(edit_net,nepochs, args, vocab, print_every=100, check_every=500):
                 edit_net.train()
     return edit_net
 
+def testing(edit_net, args, vocab):
+    testing_dataset = data.Dataset(args.testing_data_set, is_db=args.is_db)
+    edit_net.eval()
+    evaluator = Evaluator(loss= nn.NLLLoss(ignore_index=vocab.w2i['PAD'], reduction='none'))
+    val_loss, blue_score, sari, sys_out, add_score, del_score, keep_score = evaluator.evaluate(testing_dataset, vocab, edit_net, args)
+    unchanged_percent = 0.0
+    unchanged_count = 0
+    # Process sys_out
+    print(f"Bleu Score: {blue_score}, SARI score: {sari}, Unchanged: {unchanged_percent*100}%")
+
 # dataset='newsela'
 def main():
     torch.manual_seed(233)
@@ -181,8 +191,14 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_set', type=str,dest='data_set',
-                        default='',
-                        help='Path to train vocab_data')
+                        default=None,
+                        help='Path to training dataset.')
+    parser.add_argument('--eval_data_set', type=str, dest='eval_data_set',
+                        default=None,
+                        help='Path to evaluation dataset.')
+    parser.add_argument('--test_data_set', type=str, dest='test_data_set',
+                        default=None,
+                        help='Path to test dataset.')
     parser.add_argument('--store_dir', action='store', dest='store_dir',
                         default=os.path.join(WORK, 'editnts-ppdb'),
                         help='Path to exp storage directory.')
@@ -198,8 +214,6 @@ def main():
     parser.add_argument('--max_seq_len', dest='max_seq_len', default=100)
     parser.add_argument('--is_db', dest='is_db', default=False, action='store_true',
                         help='Is the dataset a DB?')
-    parser.add_argument('--is_eval', dest='is_eval', default=False, action='store_true',
-                        help='Should training use evaluation?')
 
     parser.add_argument('--epochs', type=int, default=50)
     parser.add_argument('--hidden', type=int, default=200)
@@ -246,14 +260,19 @@ def main():
     edit_net.cuda()
 
     if args.load_model is not None:
-        print("load edit_net for further training")
+        print("load edit_net for further training/testing")
         ckpt_path = args.load_model
         ckpt = Checkpoint.load(ckpt_path)
         edit_net = ckpt.model
         edit_net.cuda()
         edit_net.train()
 
-    training(edit_net, args.epochs, args, vocab)
+    if args.training_data_set != None:
+        training(edit_net, args.epochs, args, vocab)
+    elif args.test_data_set != None:
+        testing(edit_net, args, vocab)
+    else:
+        print('Must provide either a training or testing dataset')
 
 
 if __name__ == '__main__':

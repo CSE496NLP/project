@@ -43,6 +43,9 @@ class Evaluator():
         bleu_list = []
         ter = 0.
         sari_list = []
+        add_list = []
+        del_list = []
+        keep_list = []
         sys_out=[]
 
         print('Doing tokenized evaluation')
@@ -116,7 +119,12 @@ class Evaluator():
                     comp_string = ' '.join(example['comp_tokens'])
                     simp_string = ' '.join(example['simp_tokens'])
                     gen_string = ' '.join(greedy_decoded_tokens)
-                    sari_list.append(SARIsent(comp_string, gen_string, [simp_string]))
+                    sari_score, keepF1, delF1, addF1 = SARIsent(comp_string, gen_string, [simp_string])
+                    sari_list.append(sari_score)
+                    add_list.append(addF1)
+                    del_list.append(delF1)
+                    keep_list.append(keepF1)
+                    
 
         print('loss_with_teacher_forcing', np.mean(print_loss_tf))
-        return np.mean(print_loss_tf), np.mean(bleu_list), np.mean(sari_list), sys_out
+        return np.mean(print_loss_tf), np.mean(bleu_list), np.mean(sari_list), sys_out, np.mean(add_list), np.mean(del_list), np.mean(keep_list)
