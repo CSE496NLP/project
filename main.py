@@ -152,7 +152,7 @@ def training(edit_net,nepochs, args, vocab, print_every=100, check_every=500):
                 print(log_msg)
 
                 # Checkpoint
-            if i % check_every == 0 and args.eval_data_set != none:
+            if i % check_every == 0 and args.eval_data_set != None:
                 edit_net.eval()
 
                 val_loss, bleu_score, sari, sys_out, add_score, del_score, keep_score = evaluator.evaluate(eval_dataset, vocab, edit_net,args)
