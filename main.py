@@ -267,7 +267,7 @@ def main():
         edit_net.cuda()
         edit_net.train()
 
-    if args.training_data_set != None:
+    if args.data_set != None:
         training(edit_net, args.epochs, args, vocab)
     elif args.test_data_set != None:
         testing(edit_net, args, vocab)
