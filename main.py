@@ -181,7 +181,7 @@ def testing(edit_net, args, vocab):
     num_sentences = 0
     for i, sent in enumerate(sys_out):
         num_sentences = i + 1
-        if sent.join(' ') == testing_dataset.df.loc[i]['comp_tokens'].join(' '):
+        if ' '.join(sent) == ' '.join(testing_dataset.df.loc[i]['comp_tokens']):
             unchanged_count += 1
     unchanged_percent = unchanged_count / num_sentences
     print(f"Bleu Score: {blue_score}, SARI score: {sari}, Unchanged: {unchanged_percent*100}%")
