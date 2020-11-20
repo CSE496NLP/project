@@ -34,7 +34,7 @@ def translate(line, vocab, pos_vocab, model):
     return new_sentence
 
 def main():
-    parser = argparse.ArgumentParse()
+    parser = argparse.ArgumentParser()
     parser.add_argument("--checkpoint", type=str, dest='checkpoint',
                         help="Path to Model checkpoint")
     parser.add_argument("--vocabulary-store", type=str, dest='vocabulary_store',
