@@ -184,7 +184,7 @@ def testing(edit_net, args, vocab):
         if ' '.join(sent) == ' '.join(testing_dataset.df.loc[i]['comp_tokens']):
             unchanged_count += 1
     unchanged_percent = unchanged_count / num_sentences
-    print(f"Bleu Score: {blue_score}, SARI score: {sari}, Unchanged: {unchanged_percent*100}%")
+    print(f"Bleu Score: {blue_score}, SARI score: {sari} (add: {add_score}; del: {del_score}, keep: {keep_score}), Unchanged: {unchanged_percent*100}%")
 
 # dataset='newsela'
 def main():
