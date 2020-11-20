@@ -190,8 +190,8 @@ def testing(edit_net, args, vocab):
     if args.limit_test_elements != None:
         print("Sentences:")
         for i, sent in enumerate(sys_out):
-            print(" - From: {' '.join(testing_dataset.df.loc[i]['comp_tokens'])}")
-            print("   To  : {sent}")
+            print(f" - From: {' '.join(testing_dataset.df.loc[i]['comp_tokens'])}")
+            print(f"   To  : {sent}")
 
 # dataset='newsela'
 def main():
