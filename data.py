@@ -141,7 +141,7 @@ class POSvocab():
         self.i2w = {}
         self.count = 0
         self.embedding = None
-        with open(vocab_path+'postag_set.p','rb') as f:
+        with open(os.path.join(vocab_path, 'postag_set.p'), 'rb') as f:
             # postag_set is from NLTK
             tagdict = pickle.load(f)
 
