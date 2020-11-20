@@ -4,7 +4,7 @@
 import argparse
 import numpy as np
 import torch
-from checkpoint import CheckPoint
+from checkpoint import Checkpoint
 from editnts import EditNTS
 from label_edits import edit2sent
 from data import id2edits, Vocab, POSvocab
