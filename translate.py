@@ -73,3 +73,6 @@ def main():
         print("Type a sentence (quit to exit).")
         in_str = raw_input()
 
+
+if __name__ == "__main__":
+    main()
