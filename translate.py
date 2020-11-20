@@ -67,12 +67,12 @@ def main():
     print(editnet.cuda())
     print("Done.")
 
-    print("Type a sentence (quit to exit).")
-    in_str = raw_input()
+    print()
+    in_str = input("Type a sentence (quit to exit): ")
     while(in_str != "quit"):
         print(translate(in_str, vocab, pos_vocab, editnet))
-        print("Type a sentence (quit to exit).")
-        in_str = raw_input()
+        print()
+        in_str = input("Type a sentence (quit to exit): ")
 
 
 if __name__ == "__main__":
