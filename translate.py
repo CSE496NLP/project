@@ -57,7 +57,7 @@ def main():
     vocab = Vocab()
     vocab.add_vocab_from_file(os.path.join(args.vocabulary_store, "vocab.txt"), args.vocabulary_size)
     vocab.add_embedding(os.path.join(args.vocabulary_store, "glove.6B.100d.txt"))
-    pos_vocab = data.POSvocab(args.vocabulary_store)
+    pos_vocab = POSvocab(args.vocabulary_store)
     print("Done.")
 
     print("Loading checkpoint...")
