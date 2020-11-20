@@ -12,6 +12,7 @@ from data import id2edits, Vocab, POSvocab
 from nltk import pos_tag
 
 import sys
+import os
 
 def to_token(word, vocab):
     return vocab.w2i[word] if word in vocab.w2i.keys() else vocab.w2i['UNK']
