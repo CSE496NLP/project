@@ -173,6 +173,8 @@ def training(edit_net,nepochs, args, vocab, print_every=100, check_every=500):
 
 def testing(edit_net, args, vocab):
     testing_dataset = data.Dataset(args.test_data_set, is_db=args.is_db)
+    if args.limit_test_elements != None:
+        testing_dataset.df = testing_dataset.df.loc[0:args.limit_test_elements]
     edit_net.eval()
     evaluator = Evaluator(loss= nn.NLLLoss(ignore_index=vocab.w2i['PAD'], reduction='none'))
     val_loss, blue_score, sari, sys_out, add_score, del_score, keep_score = evaluator.evaluate(testing_dataset, vocab, edit_net, args)
@@ -185,6 +187,11 @@ def testing(edit_net, args, vocab):
             unchanged_count += 1
     unchanged_percent = unchanged_count / num_sentences
     print(f"Bleu Score: {blue_score}, SARI score: {sari} (add: {add_score}; del: {del_score}, keep: {keep_score}), Unchanged: {unchanged_percent*100}%")
+    if args.limit_test_elements != None:
+        print("Sentences:")
+        for i, sent in enumerate(sys_out):
+            print(" - From: {' '.join(testing_dataset.df.loc[i]['comp_tokens'])}")
+            print("   To  : {sent}")
 
 # dataset='newsela'
 def main():
@@ -213,6 +220,10 @@ def main():
     parser.add_argument('--load_model', type=str, dest='load_model',
                         default=None,
                         help='Path for loading pre-trained model for further training')
+
+    parser.add_argument('--limit_test_elements', type=int, dest='limit_test_elements',
+                        default=None,
+                        help="Limit the number of sentences used for testing.")
 
     parser.add_argument('--vocab_size', dest='vocab_size', default=30000, type=int)
     parser.add_argument('--batch_size', dest='batch_size', default=32, type=int)
