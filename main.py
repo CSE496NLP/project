@@ -172,13 +172,18 @@ def training(edit_net,nepochs, args, vocab, print_every=100, check_every=500):
     return edit_net
 
 def testing(edit_net, args, vocab):
-    testing_dataset = data.Dataset(args.testing_data_set, is_db=args.is_db)
+    testing_dataset = data.Dataset(args.test_data_set, is_db=args.is_db)
     edit_net.eval()
     evaluator = Evaluator(loss= nn.NLLLoss(ignore_index=vocab.w2i['PAD'], reduction='none'))
     val_loss, blue_score, sari, sys_out, add_score, del_score, keep_score = evaluator.evaluate(testing_dataset, vocab, edit_net, args)
     unchanged_percent = 0.0
     unchanged_count = 0
-    # Process sys_out
+    num_sentences = 0
+    for i, sent in enumerate(sys_out):
+        num_sentences = i + 1
+        if sent.join(' ') == testing_dataset.df.loc[i]['comp_tokens'].join(' '):
+            unchanged_count += 1
+    unchanged_percent = unchanged_count / num_sentences
     print(f"Bleu Score: {blue_score}, SARI score: {sari}, Unchanged: {unchanged_percent*100}%")
 
 # dataset='newsela'
