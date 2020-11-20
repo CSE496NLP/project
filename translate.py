@@ -25,7 +25,7 @@ def pos_line(line, pos_vocab):
 
 def translate(line, vocab, pos_vocab, model):
     input_tokens = line.lower().split()
-    input_ids = tokenize_line(line)
+    input_ids = tokenize_line(line, vocab)
     input_pos = pos_line(line, pos_vocab)
     output = model(input_ids, [], input_ids, input_pos, [], 0.0)
     actions = torch.argmax(output, dim=1).view(-1).data.cpu().numpy()
