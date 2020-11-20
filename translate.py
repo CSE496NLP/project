@@ -21,7 +21,7 @@ def tokenize_line(line, vocab):
     return list(map(lambda word: to_token(word, vocab), line.lower().split()))
 
 def pos_line(line, pos_vocab):
-    return list(map(lambda word: to_token(pos_tag(word), vocab)), line.lower().split())
+    return list(map(lambda word: to_token(pos_tag(word), vocab), line.lower().split()))
 
 def translate(line, vocab, pos_vocab, model):
     input_tokens = line.lower().split()
