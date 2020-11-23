@@ -141,7 +141,7 @@ class POSvocab():
         self.i2w = {}
         self.count = 0
         self.embedding = None
-        with open(vocab_path+'postag_set.p','rb') as f:
+        with open(os.path.join(vocab_path, 'postag_set.p'), 'rb') as f:
             # postag_set is from NLTK
             tagdict = pickle.load(f)
 
@@ -189,8 +189,21 @@ class Datachunk():
                 yield self.idx_count, df
 
 class Dataset():
-    def __init__(self,data_path):
-        self.df = pd.read_pickle(data_path)
+    def __init__(self,data_path,is_db=False):
+        if is_db:
+            import db
+            self.connection = db.create_connection(data_path)
+            self.df = pd.read_sql("SELECT * FROM lines", self.connection)
+            self.df['comp_tokens'] = self.df['comp_tokens'].map(lambda thing: thing.split())
+            self.df['comp_ids'] = self.df['comp_ids'].map(lambda thing: list(map(int, thing.split())))
+            self.df['simp_tokens'] = self.df['simp_tokens'].map(lambda thing: thing.split())
+            self.df['simp_id'] = self.df['simp_ids'].map(lambda thing: list(map(int, thing.split())))
+            self.df['edit_labels'] = self.df['edit_labels'].map(lambda thing: thing.split())
+            self.df['new_edit_ids'] = self.df['new_edit_ids'].map(lambda thing: list(map(int, thing.split())))
+            self.df['comp_pos_tags'] = self.df['comp_pos_tags'].map(lambda thing: thing.split())
+            self.df['comp_pos_ids'] = self.df['comp_pos_ids'].map(lambda thing: list(map(int, thing.split())))
+        else:
+            self.df = pd.read_pickle(data_path)
         self.idx_count = 0
 
     def example_generator(self):

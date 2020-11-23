@@ -178,7 +178,7 @@ def SARIsent (ssent, csent, rsents) :
     avgaddscore = sum([add1score,add2score,add3score,add4score])/4
     finalscore = (avgkeepscore + avgdelscore + avgaddscore ) / 3
 
-    return finalscore
+    return finalscore, keep1score, del1score, add1score
 
 
 def main():
@@ -200,4 +200,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()  
+    main()

@@ -83,7 +83,8 @@ def reweight_global_loss(w_add,w_keep,w_del):
     return NLL_weight
 
 def training(edit_net,nepochs, args, vocab, print_every=100, check_every=500):
-    eval_dataset = data.Dataset(args.data_path + 'val.df.filtered.pos') # load eval dataset
+    if args.eval_data_set != None:
+        eval_dataset = data.Dataset(args.eval_data_set, is_db=args.is_db) # load eval dataset
     evaluator = Evaluator(loss= nn.NLLLoss(ignore_index=vocab.w2i['PAD'], reduction='none'))
     editnet_optimizer = torch.optim.Adam(edit_net.parameters(),
                                           lr=1e-3, weight_decay=1e-6)
@@ -102,10 +103,10 @@ def training(edit_net,nepochs, args, vocab, print_every=100, check_every=500):
     for epoch in range(nepochs):
         # scheduler.step()
         #reload training for every epoch
-        if os.path.isfile(args.data_path+'train.df.filtered.pos'):
-            train_dataset = data.Dataset(args.data_path + 'train.df.filtered.pos')
+        if os.path.isfile(args.data_set):
+            train_dataset = data.Dataset(args.data_set, is_db=args.is_db)
         else:  # iter chunks and vocab_data
-            train_dataset = data.Datachunk(args.data_path + 'train.df.filtered.pos')
+            train_dataset = data.Datachunk(args.data_set)
 
         for i, batch_df in train_dataset.batch_generator(batch_size=args.batch_size, shuffle=True):
 
@@ -151,15 +152,16 @@ def training(edit_net,nepochs, args, vocab, print_every=100, check_every=500):
                 print(log_msg)
 
                 # Checkpoint
-            if i % check_every == 0:
+            if i % check_every == 0 and args.eval_data_set != None:
                 edit_net.eval()
 
-                val_loss, bleu_score, sari, sys_out = evaluator.evaluate(eval_dataset, vocab, edit_net,args)
+                val_loss, bleu_score, sari, sys_out, add_score, del_score, keep_score = evaluator.evaluate(eval_dataset, vocab, edit_net,args)
                 log_msg = "epoch %d, step %d, Dev loss: %.4f, Bleu score: %.4f, Sari: %.4f \n" % (epoch, i, val_loss, bleu_score, sari)
                 print(log_msg)
 
                 if val_loss < best_eval_loss:
                     best_eval_loss = val_loss
+            if i % check_every == 0:
                 Checkpoint(model=edit_net,
                            opt=editnet_optimizer,
                            epoch=epoch, step=i,
@@ -169,17 +171,48 @@ def training(edit_net,nepochs, args, vocab, print_every=100, check_every=500):
                 edit_net.train()
     return edit_net
 
-dataset='newsela'
+def testing(edit_net, args, vocab):
+    testing_dataset = data.Dataset(args.test_data_set, is_db=args.is_db)
+    if args.limit_test_elements != None:
+        testing_dataset.df = testing_dataset.df.loc[0:args.limit_test_elements]
+    edit_net.eval()
+    evaluator = Evaluator(loss= nn.NLLLoss(ignore_index=vocab.w2i['PAD'], reduction='none'))
+    val_loss, blue_score, sari, sys_out, add_score, del_score, keep_score = evaluator.evaluate(testing_dataset, vocab, edit_net, args)
+    unchanged_percent = 0.0
+    unchanged_count = 0
+    num_sentences = 0
+    for i, sent in enumerate(sys_out):
+        num_sentences = i + 1
+        if ' '.join(sent).lower() == ' '.join(testing_dataset.df.loc[i]['comp_tokens']).lower():
+            unchanged_count += 1
+    unchanged_percent = unchanged_count / num_sentences
+    print(f"Bleu Score: {blue_score}, SARI score: {sari} (add: {add_score}; del: {del_score}, keep: {keep_score}), Unchanged: {unchanged_percent*100}%")
+    if args.limit_test_elements != None:
+        print("Sentences:")
+        for i, sent in enumerate(sys_out):
+            print(f" - From: {' '.join(testing_dataset.df.loc[i]['comp_tokens'])}")
+            print(f"   To  : {sent}")
+
+# dataset='newsela'
 def main():
     torch.manual_seed(233)
     logging.basicConfig(level=logging.INFO, format='%(asctime)s [INFO] %(message)s')
 
+    import os
+    WORK = os.environ['WORK']
+
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_path', type=str,dest='data_path',
-                        default='/home/ml/ydong26/data/EditNTS_data/editnet_data/%s/'%dataset,
-                        help='Path to train vocab_data')
+    parser.add_argument('--data_set', type=str,dest='data_set',
+                        default=None,
+                        help='Path to training dataset.')
+    parser.add_argument('--eval_data_set', type=str, dest='eval_data_set',
+                        default=None,
+                        help='Path to evaluation dataset.')
+    parser.add_argument('--test_data_set', type=str, dest='test_data_set',
+                        default=None,
+                        help='Path to test dataset.')
     parser.add_argument('--store_dir', action='store', dest='store_dir',
-                        default='/home/ml/ydong26/tmp_store/editNTS_%s'%dataset,
+                        default=os.path.join(WORK, 'editnts-ppdb'),
                         help='Path to exp storage directory.')
     parser.add_argument('--vocab_path', type=str, dest='vocab_path',
                         default='../vocab_data/',
@@ -188,9 +221,15 @@ def main():
                         default=None,
                         help='Path for loading pre-trained model for further training')
 
+    parser.add_argument('--limit_test_elements', type=int, dest='limit_test_elements',
+                        default=None,
+                        help="Limit the number of sentences used for testing.")
+
     parser.add_argument('--vocab_size', dest='vocab_size', default=30000, type=int)
     parser.add_argument('--batch_size', dest='batch_size', default=32, type=int)
     parser.add_argument('--max_seq_len', dest='max_seq_len', default=100)
+    parser.add_argument('--is_db', dest='is_db', default=False, action='store_true',
+                        help='Is the dataset a DB?')
 
     parser.add_argument('--epochs', type=int, default=50)
     parser.add_argument('--hidden', type=int, default=200)
@@ -237,14 +276,19 @@ def main():
     edit_net.cuda()
 
     if args.load_model is not None:
-        print("load edit_net for further training")
+        print("load edit_net for further training/testing")
         ckpt_path = args.load_model
         ckpt = Checkpoint.load(ckpt_path)
         edit_net = ckpt.model
         edit_net.cuda()
         edit_net.train()
 
-    training(edit_net, args.epochs, args, vocab)
+    if args.data_set != None:
+        training(edit_net, args.epochs, args, vocab)
+    elif args.test_data_set != None:
+        testing(edit_net, args, vocab)
+    else:
+        print('Must provide either a training or testing dataset')
 
 
 if __name__ == '__main__':
