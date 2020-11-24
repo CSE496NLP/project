@@ -25,10 +25,10 @@ arguments can be used to specify the data to preprocess:
    by `--data-path` that contains the data you wish to preprocess.
  - `--file-base`: This is a prefix for the filenames within the directory
    specified by `--dataset` that you wish to preprocess. The files specified by
-$FILEBASE.{src,dst} must exist within said directory.
+   `$FILEBASE.{src,dst}` must exist within said directory.
  - `--ppdb_path`: The path to the directory containing PPDB files that you wish
    to preprocess. If this argument is not provided, no preprocessing will be
-done with PPDB.
+   done with PPDB.
  - `--ppdb_version`: Name of the file within `--ppdb_path` to preprocess.
 
 For wikilarge/small, a database will be created in `db/$FILEBASE.db`. For PPDB,
