@@ -41,6 +41,9 @@ def replace_lrb(sent_string):
 
 
 def process_raw_line(comp_line, simp_line, token_vocab, pos_vocab):
+    comp_line = comp_line.decode('utf-8')
+    simp_line = simp_line.decode('utf-8')
+
     def lookup_id(word, vocab):
         return vocab.w2i[word] if word in vocab.w2i.keys() else vocab.w2i[UNK]
 

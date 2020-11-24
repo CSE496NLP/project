@@ -1,9 +1,32 @@
 import argparse
 import os
+import mmap
 
-import data_preprocess
+import pandas
+
+import data
+from data_preprocess import process_raw_line
 import db
 from ppdb import parse_ppdb
+
+def file_iter(path):
+    with open(path, 'rb') as f:
+        map_file = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
+        return iter(map_file.readline, b"")
+
+def read_dataset(src_path, dst_path, vocab, pos_vocab):
+    src_iter = file_iter(src_path)
+    dst_iter = file_iter(dst_path)
+    
+    data = zip(src_iter, dst_iter)
+    rows = map(lambda line: process_raw_line(line[0], line[1], vocab, pos_vocab), data)
+    
+    return pandas.DataFrame(rows)
+
+def save_dataset(df, db_path):
+    conn = db.create_connection(db_path)
+    df.to_sql('lines', conn, chunksize=500, method='multi')
+    conn.close()
 
 def main():
     
@@ -27,7 +50,7 @@ def main():
         '--file-base',
         type=str,
         dest='file_base',
-        default='wiki.full.aner.')
+        default='wiki.full.aner.ori')
     argparser.add_argument(
         '--ppdb-version',
         type=str,
@@ -50,17 +73,19 @@ def main():
         dest='vocab_path',
         default=os.path.join(os.path.dirname(os.path.realpath(__file__)), 'vocab_data') +'/'
     )
+    argparser.add_argument(
+        '--ppdb-path',
+        type=str,
+        dest='ppdb_path'
+    )
     args = argparser.parse_args()
 
     if args.output_dir == None:
         args.output_dir = os.path.join(WORK, 'editnts-ppdb-data', args.dataset)
-    ppdb_path = os.path.join(args.data_path, 'ppdb', args.ppdb_version)
-    input_src_sent = os.path.join(args.data_path, args.dataset, f"{args.file_base}{args.dataset_part}.src")
-    input_dst_sent = os.path.join(args.data_path, args.dataset, f"{args.file_base}{args.dataset_part}.dst")
+    input_src_sent = os.path.join(args.data_path, args.dataset, f"{args.file_base}.{args.dataset_part}.src")
+    input_dst_sent = os.path.join(args.data_path, args.dataset, f"{args.file_base}.{args.dataset_part}.dst")
 
-    assert os.path.exists(ppdb_path), "Ppdb path should exist"
     assert os.path.exists(args.vocab_path), "Vocab path should exist"
-    assert os.path.exists('db/ppdb.db'), "PPDB database should exist"
 
     print(f"Arguments:")
     print(f"  Dataset            : {args.dataset}")
@@ -73,12 +98,21 @@ def main():
     print(f"  Input SRC Sentences: {input_src_sent}")
     print(f"  Input DST Sentences: {input_dst_sent}")
 
-    print("Processing PPDB...")
-    df = parse_ppdb(ppdb_path)
-    print('Saving PPDB...')
-    conn = db.create_connection('db/ppdb-2.db')
-    df.to_sql('lines', conn, chunksize=500, method='multi')
-    conn.close()
+    print("Reading vocab")
+    vocab = data.Vocab()
+    vocab.add_vocab_from_file('./vocab_data/vocab.txt')
+    pos_vocab = data.POSvocab('./vocab_data/')
+
+    print("Reading dataset...")
+    df = read_dataset(input_src_sent, input_dst_sent, vocab, pos_vocab)
+    print("Saving dataset...")
+    save_dataset(df, f"db/{args.file_base}.{args.dataset_part}")
+
+    if(args.ppdb_path != None):
+        print("Reading PPDB...")
+        df = parse_ppdb(args.ppdb_path, vocab, pos_vocab)
+        print("Saving PPDB...")
+        save_dataset(df, "db/ppdb.db")
         
     print("Done.")
 
